@@ -1,2 +1,2 @@
-from .types import *
+from webres.types import *
 

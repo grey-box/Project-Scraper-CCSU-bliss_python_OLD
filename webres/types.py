@@ -2,10 +2,14 @@
 @author Kyle Guarco
 """
 
+from http.client import HTTPResponse
+from io import BufferedWriter
 from pathlib import Path
+from typing import Optional
 from urllib.parse import ParseResult, urlparse
 
-from osdir import get_storage_dir
+from webres.request import urlopen
+from webres.parse import url2filepath
 
 class WebResourceError(Exception):
     """ Raised when a WebResource cannot aquire a remote resource. """
@@ -13,58 +17,46 @@ class WebResourceError(Exception):
 
 class WebResource():
     """ Blanket implementation for a remote resource. """
-    def __init__(self, url: str, ext: str):
+    def __init__(self, url: str):
         self._url: ParseResult = urlparse(url)
-        self._ext: str = ext
-        self._genpath: Path = self._filepath()
-
-    def _filepath(self) -> Path:
-        """ Builds a folder path to the resource. 
-        @returns A filepath
-        """
-        filepath = get_storage_dir() / self._url.netloc
-
-        pathsplit = self._url.path.split('/')
-        for path in pathsplit[:-1]:
-            filepath /= path
-        
-        lastpath = pathsplit[-1:][0] 
-        if not lastpath:
-            lastpath = "index"
-
-        if self._url.query or self._url.fragment:
-            filepath /= lastpath
-            filepath /= self._url.query
-            filepath /= self._url.fragment
-
-        if not filepath.exists():
-            filepath.mkdir(parents=True)
-        
-        filepath /= lastpath + self.getextension()
-
-        return filepath
+        self._genpath: Path = url2filepath(self._url)
+        self._savebytes: Optional[bytes] = None
 
     def filename(self) -> str:
         """ Builds and returns the expected local resource name. """
         return self._genpath.name
 
-    def save(self, contents: bytes) -> bool:
-        """ Saves this resource to the local filesystem. 
-        if self._genpath.exists():
+    def provide_bytes(self, content: bytes):
+        """ Provide the bytes for saving the file instead. 
+        This is used if the data has already been obtained, so the
+        programmer doesn't have to make another web request for the data.
+        @returns Self.
         """
+        self._savebytes = content
+        return self
+
+    def save(self) -> bool:
+        """ Saves this resource to the local filesystem. """
         if self.exists():
             return False
         
         with self._genpath.open(mode='wb') as file:
-            file.write(contents)
+            file: BufferedWriter
+            if not self._savebytes:
+                with urlopen(self.get_url()) as content:
+                    content: HTTPResponse
+                    data = content.read()
+            else:
+                data = self._savebytes
+            file.write(data)
 
         return True
 
-    def getextension(self) -> str:
+    def get_path(self) -> Path:
         """ Returns the expected file extension of this resource. """
-        return self._ext
+        return self._genpath
 
-    def getsite(self) -> str:
+    def get_url(self) -> str:
         """ Returns the URL this resource was obtained from. """
         return self._url.geturl()
 

@@ -36,7 +36,8 @@ def url2filepath(url) -> Path:
         for path in pathsplit[:-1]:
             filepath /= path
         
-        lastpath: str = pathsplit[-1:][0] 
+        # Grabs the last element in the list
+        lastpath: str = pathsplit[-1]
         if not lastpath:
             lastpath = "index"
 
@@ -45,6 +46,7 @@ def url2filepath(url) -> Path:
             filepath /= url.query
             filepath /= url.fragment
 
+        # Creating the structure of the path if folders don't already exist
         if not filepath.exists():
             filepath.mkdir(parents=True)
         

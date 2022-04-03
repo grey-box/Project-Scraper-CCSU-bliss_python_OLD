@@ -11,19 +11,17 @@ from urllib.parse import ParseResult, urlparse
 from webres.request import urlopen
 from webres.parse import url2filepath
 
-class WebResourceError(Exception):
-    """ Raised when a WebResource cannot aquire a remote resource. """
-    pass
-
 class WebResource():
-    """ Blanket implementation for a remote resource. """
+    """ Blanket implementation for a remote resource.
+        Taking a web resource (image/javascript/text/css/etc.), parsing that resource
+        and saving it into a file """
     def __init__(self, url: str):
         self._url: ParseResult = urlparse(url)
         self._genpath: Path = url2filepath(self._url)
         self._savebytes: Optional[bytes] = None
 
     def filename(self) -> str:
-        """ Builds and returns the expected local resource name. """
+        """ Returns the expected local resource name. """
         return self._genpath.name
 
     def provide_bytes(self, content: bytes):

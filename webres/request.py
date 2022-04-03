@@ -10,6 +10,7 @@ DEFAULT_USER_AGENT = 'Mozilla/5.0'
 
 def urlopen(url: str, user_agent: Optional[str] = None) -> client.HTTPResponse:
     """ urllib.request.urlopen, except with a user agent. 
+    Created a wrapper for urlopen
     @returns An HTTPResponse.
     """
     return urlreq.urlopen(urlreq.Request(url, headers={'User-Agent': user_agent or DEFAULT_USER_AGENT}))

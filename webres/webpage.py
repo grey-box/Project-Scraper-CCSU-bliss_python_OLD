@@ -22,7 +22,7 @@ class Webpage(WebResource):
             with urlopen(url) as response:
                 self._bs = BeautifulSoup(response.read(), 'html.parser')
         except (URLError, ValueError):
-            raise WebResourceError
+            pass
 
     def acquire_resources(self):
         """ Enables resource acquisition for this webpage.
